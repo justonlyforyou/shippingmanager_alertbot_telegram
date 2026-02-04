@@ -8,6 +8,12 @@ A standalone price alert bot for [Shipping Manager](https://shippingmanager.cc) 
 - Persistent cooldown state survives restarts
 - 130+ timezone abbreviations supported
 
+## Community Discord & Support
+
+Join our [Discord Community](https://discord.gg/2wvtPz6k89) for questions, issues, or feature requests!
+
+---
+
 ## How It Works
 
 The bot checks fuel and CO2 prices every 30 minutes (at :01 and :31 UTC, right after prices change at :00 and :30). When a price drops to or below your threshold, it sends a Telegram message. It will only alert once per price slot to avoid spamming.
