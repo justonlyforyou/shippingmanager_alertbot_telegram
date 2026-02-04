@@ -1,0 +1,58 @@
+name: Security
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Go vet
+        run: go vet ./...
+
+      - name: Install govulncheck
+        run: go install golang.org/x/vuln/cmd/govulncheck@latest
+
+      - name: Run govulncheck
+        run: govulncheck ./...
+
+      - name: Install gosec
+        run: go install github.com/securego/gosec/v2/cmd/gosec@latest
+
+      - name: Run gosec
+        run: gosec -severity medium -confidence medium -fmt text ./...
+
+      - name: Install staticcheck
+        run: go install honnef.co/go/tools/cmd/staticcheck@latest
+
+      - name: Run staticcheck
+        run: staticcheck ./...
+
+      - name: Check for secrets in code
+        run: |
+          echo "Scanning for potential hardcoded secrets..."
+          PATTERNS='(password|secret|token|api_key|apikey|private_key)\s*[:=]\s*["\x27][^\s"'\'']{8,}'
+          if grep -rniE "$PATTERNS" --include="*.go" .; then
+            echo "FAIL: Potential hardcoded secrets found in source code"
+            exit 1
+          fi
+          echo "OK: No hardcoded secrets detected"
+
+      - name: Check for dangerous imports
+        run: |
+          echo "Scanning for dangerous patterns..."
+          DANGEROUS='os/exec|plugin'
+          if grep -rn "\"${DANGEROUS}\"" --include="*.go" .; then
+            echo "FAIL: Dangerous imports found (os/exec, plugin)"
+            exit 1
+          fi
+          echo "OK: No dangerous imports detected"
